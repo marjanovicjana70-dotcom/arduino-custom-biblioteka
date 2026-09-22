@@ -14,7 +14,7 @@
 
 #define NUM_DIGITS 4
 #define REFRESH_INTERVAL 2
-//ovde kombinacijom odgovarajucih bitova segmenta stvaramo brojeve
+
 class Jana_ard_lib{
  public:
     Jana_ard_lib(int rclkPin, int sclkPin, int dioPin, bool commonAnode = true);
@@ -23,20 +23,21 @@ class Jana_ard_lib{
     void loop();
 
     void print(int num, bool zeroPad = false);
-    //void print(double num,int decimalPlaces = -1, bool zeroPad = false);
+    void print(const char* text);
+    void printTime(int hours, int minutes, bool colon = true);
 
     void clear();
-    //void off();
-    //void on();
+    void off();
+    void on();
 
-    //void delay(unsigned long ms);
-    //void yield();
+    void delay(unsigned long ms);
+    void yield();
 
-    //void setDot(int position, bool state = true);
-    //void setSegments(int position, uint8_t segments);
-    //void setChar(int position, char c);
-    //void setNum(int position, int num);
-
+    void setDot(int position, bool state = true);
+    void setSegments(int position, uint8_t segments);
+    void setChar(int position, char c);
+    void setNum(int position, int num);
+    void showErr();
 
   private:
     int _sclkPin;
@@ -50,10 +51,12 @@ class Jana_ard_lib{
     uint8_t _currentDigit;
     unsigned long _lastRefresh;
     
+
     void _shiftOut(uint8_t data);
     void _latch();
     void _writeDigit(uint8_t position, uint8_t segments);
     void _printInt(int num, bool zeroPad);
+    void _printStr(const char* text);
     static uint8_t _charToSegments(char c);
 
 

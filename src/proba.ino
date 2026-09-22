@@ -9,12 +9,22 @@ Jana_ard_lib display(RCLK_PIN, SCLK_PIN, DIO_PIN);
 void setup(){
 
 display.begin();
-display.print(1234);
+
 
 
 }
 
 void loop(){
-   
-   display.loop();
+
+display.print(1234);
+display.delay(2000);
+
+display.print("JANA");
+display.delay(2000);
+
+display.printTime(10, 34);
+display.delay(2000);
+
+display.loop();
+
 }

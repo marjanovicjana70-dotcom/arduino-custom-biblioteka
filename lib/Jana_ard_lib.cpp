@@ -14,7 +14,7 @@ static const uint8_t DIG_MAP[] PROGMEM = {
 };
 
 static const uint8_t DIGIT_PATTERNS[NUM_DIGITS] = {0x08, 0x04, 0x02, 0x01};
-
+//ovaj niz nam treba zbog drugog shift registra uz pomoc kojeg postizemo multipleksiranje
 uint8_t Jana_ard_lib::_charToSegments(char c){
 
 if(c >= '0' && c <= '9'){
@@ -59,19 +59,103 @@ switch(c){
 
 }
 
+void Jana_ard_lib::showErr(){
+
+  _buffer[1] = _charToSegments('e');
+  _buffer[2] = _charToSegments('r');
+  _buffer[3] = _charToSegments('r');
+
+}
+
+
+void Jana_ard_lib::setDot(int position, bool state){
+
+if( position >= 0 && position <= 3){
+
+_dots[position] = state;
+
+}
+
+
+}
+
+void Jana_ard_lib::setNum(int position, int num){
+
+if(position >= 0 && position <= 3 && num >= 0 && num <= 9){
+
+  _buffer[position] = _charToSegments('0' + num);
+}
+
+
+
+}
+
+void Jana_ard_lib::setChar(int position, char c){
+  if(position >= 0 && position <= 3){
+
+    _buffer[position] = _charToSegments(c);
+  }
+}
+
+void Jana_ard_lib::setSegments(int position, uint8_t segments){
+
+  if(position >= 0 && position <= 3){
+
+    _buffer[position] = segments;
+
+  }
+}
 
 Jana_ard_lib::Jana_ard_lib(int rclkPin, int sclkPin, int dioPin,bool commonAnode){
-  _sclkPin = sclkPin;
   _rclkPin = rclkPin;
+  _sclkPin = sclkPin;
   _dioPin = dioPin;
   _commonAnode = commonAnode;
+  _enabled = true;
   _currentDigit = 0;
   _lastRefresh = 0;
-  _enabled = true;
   for(int i = 0; i < NUM_DIGITS; i++){
     _buffer[i] = 0x00;
     _dots[i] = false;
   }
+}
+
+void Jana_ard_lib::delay(unsigned long ms){
+unsigned long start = millis();
+
+while(millis() - start < ms){
+
+loop();
+
+}
+
+}
+
+void Jana_ard_lib::on(){
+
+_enabled = true;
+
+}
+
+void Jana_ard_lib::off(){
+
+_enabled = false;
+
+if(_commonAnode){
+
+    _shiftOut(0xFF);
+  _shiftOut(0x00);
+}
+else {
+  _shiftOut(0x00);
+  _shiftOut(0x00);
+}
+_latch();
+}
+
+void Jana_ard_lib::yield(){
+
+  loop();
 }
 
 void Jana_ard_lib::begin(){
@@ -87,12 +171,11 @@ void Jana_ard_lib::begin(){
 
 void Jana_ard_lib::_shiftOut(uint8_t data){
 
-  for(int i=7; i>=0; i--){
-     
-     digitalWrite(_dioPin, (data >> i) & 1);
-     digitalWrite(_sclkPin, LOW);
-     digitalWrite(_sclkPin, HIGH);
-
+  for(int i = 7; i >= 0; i--){
+    
+    digitalWrite(_dioPin, (data >> i) & 1);
+  digitalWrite(_sclkPin, LOW);
+  digitalWrite(_sclkPin, HIGH);
 
   }
 
@@ -149,13 +232,16 @@ void Jana_ard_lib::print(int num, bool zeroPad){
     _printInt(num, zeroPad);
 }
 
+
+void Jana_ard_lib::print(const char* text){
+  _printStr(text);
+}
+
 void Jana_ard_lib::_printInt(int num, bool zeroPad){
   clear();
 
   if(num > 9999 || num < -999){
-    _buffer[1] = _charToSegments('e');
-    _buffer[2] = _charToSegments('r');
-    _buffer[3] = _charToSegments('r');
+    showErr();
     return;
   }
 
@@ -206,6 +292,72 @@ void Jana_ard_lib::_printInt(int num, bool zeroPad){
   }
 
 }
+
+
+
+void Jana_ard_lib::_printStr(const char* text){
+
+clear();
+
+if( text == NULL ){
+  showErr();
+  return;
+}
+
+int textIndex = 0;
+int bufferIndex = 0;
+
+while (text[textIndex] != '\0' && bufferIndex < NUM_DIGITS){
+char c = text[textIndex];
+
+if(c == '.'){
+
+  if(bufferIndex > 0){
+
+    _dots[bufferIndex - 1] = true;
+  }
+textIndex++;
+continue;
+}
+
+_buffer[bufferIndex] = _charToSegments(c);
+textIndex++;
+
+if(text[textIndex] == '.'){
+  _dots[bufferIndex] = true;
+  textIndex++;
+}
+
+bufferIndex++;
+
+}
+
+
+}
+void Jana_ard_lib::printTime(int hours, int minutes, bool colon){
+
+clear();
+
+if(hours < 0 || hours > 23 || minutes > 59 || minutes < 0){
+  showErr();
+  return;
+}
+
+_buffer[0] = _charToSegments('0' + ( hours / 10 ));
+_buffer[1] = _charToSegments('0' + (hours % 10));
+_buffer[2] = _charToSegments('0' + (minutes / 10));
+_buffer[3] = _charToSegments('0' + (minutes % 10));
+
+if(colon){
+
+_dots[1] = true;
+
+}
+}
+
+
+
+
 
 
 
