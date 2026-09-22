@@ -1,6 +1,8 @@
 # Arduino biblioteka za 4-digit 7 segment displej koja koristi 74HC595 shift register
 ***
+![Slika](./pic/4dig7seg.jpg)
 
+***
 - Moguc je prikaz brojeva izmedju -999 i 9999
 - Moguc je prikaz teksta
 - Moguc je prikaz vremena
